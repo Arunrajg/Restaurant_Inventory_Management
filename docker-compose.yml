@@ -1,0 +1,43 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:15
+    container_name: postgres_db
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: yourdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: always
+
+  adminer:
+    image: adminer:latest
+    container_name: adminer_ui
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    restart: always
+
+  fastapi:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fastapi_app
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://admin:admin123@db:5432/yourdb
+    depends_on:
+      - db
+    volumes:
+      - ./app:/app
+    restart: always
+
+volumes:
+  db_data:
